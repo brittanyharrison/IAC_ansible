@@ -15,8 +15,17 @@ Benefits:
 - Eliminate configuration drift
 
 
+
 ## Ansible 
 - Ansible is the fastest growing python-based open source IT automation tool that can be used to configure/manage systems, deploy applications and provision infrastructure on numerous cloud platforms. 
+
+Benefits :
+
+- Save time
+- Reduces tasks 
+- 
+
+Ansible is angentless because we only need to have ansiblwe installed on the controller. 
 
 ### Architecture of Ansible Cloud Integration
 ![img](img/Ansible_Diagram2-16-1536x692.png)
@@ -48,7 +57,7 @@ db1.example.com
 **Playbooks**
 - Playbooks describe the tasks to be done by declaring configurations in order to bring a managed node into the desired state.
 
-- Playbooks are files written in YAML.
+- Playbooks are files written in YAML - Yet Another markup Language.
 
 - Syntax starts with 3 dashes and then a list of plays
 
@@ -69,3 +78,16 @@ Example of Playbook:
 ```
 
 ## Ansible Set-up
+
+
+### Connecting to hosts
+
+- ssh into the ansible controller machine 
+
+- cd into `/etc/ansible/hosts` so we can connect to web and db hosts using the private ip
+
+```
+web 192.168.33.10
+db 192.168.33.11
+```
+
