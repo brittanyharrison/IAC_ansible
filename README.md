@@ -190,7 +190,7 @@ ansible host_a -m apt -a "upgrade=yes update_cache=yes" --become
 
 ##### 1) First, spin up a Virtual Machine. I have created a VM called Ansible in this demonstration.
 
-##### 2) Then ssh inside the virtual machine previously created. ``` vagrant ssh ansible ```
+##### 2) Then ssh inside the virtual machine previously created. ``` vagrant ssh controller```
 
 ##### 3) Once inside go ahead and install all Pre-requisites needed for Ansible. The commands can be seen below:
 
@@ -264,12 +264,14 @@ ec2_secret_key: <Your_Secret_Key>
   gather_facts: False
 
   vars:
-    key_name: eng89_devops
+    key_name: brittany_aws
     region: eu-west-1
-    image: ami-0f18a434af2396095
-    id: "brittany-web-app"
-    sec_group: "sg-0fd35716aff10defa"
-    subnet_id: "subnet-01cca3b390eb0a782"
+    image: ami-0be56cd3f96f13208
+    id: "eng89_brittany_playbook_app"
+    sec_group: "sg-081225d46b6a3f673"
+    subnet_id: "subnet-09c2979c7e39bc368"
+    ansible_python_interpreter: /usr/bin/python3
+
   tasks:
 
     - name: Facts
@@ -277,14 +279,14 @@ ec2_secret_key: <Your_Secret_Key>
 
       - name: Get instances facts
         ec2_instance_facts:
-          aws_access_key: "{{ec2_access_key}}"
-          aws_secret_key: "{{ec2_secret_key}}"
+          aws_access_key: "{{aws_access_key}}"
+          aws_secret_key: "{{aws_secret_key}}"
           region: "{{ region }}"
         register: result
 
       - name: Instances ID
         debug:
-          msg: "ID: {{ item.instance_id }} - State: {{ item.state.name }} - Public DNS: {{ item.publi$
+          msg: "ID: {{ item.instance_id }} - State: {{ item.state.name }} - Public DNS: {{ item.public_dns_name }}"
         loop: "{{ result.instances }}"
 
       tags: always
@@ -298,14 +300,14 @@ ec2_secret_key: <Your_Secret_Key>
           name: "{{ key_name }}"
           key_material: "{{ lookup('file', '~/.ssh/{{ key_name }}.pub') }}"
           region: "{{ region }}"
-          aws_access_key: "{{ec2_access_key}}"
-          aws_secret_key: "{{ec2_secret_key}}"
+          aws_access_key: "{{aws_access_key}}"
+          aws_secret_key: "{{aws_secret_key}}"
 
 
       - name: Provision instance(s)
         ec2:
-          aws_access_key: "{{ec2_access_key}}"
-          aws_secret_key: "{{ec2_secret_key}}"
+          aws_access_key: "{{aws_access_key}}"
+          aws_secret_key: "{{aws_secret_key}}"
           assign_public_ip: true
           key_name: "{{ key_name }}"
           id: "{{ id }}"
@@ -317,11 +319,9 @@ ec2_secret_key: <Your_Secret_Key>
           wait: true
           count: 1
           instance_tags:
-            Name: eng89_brittany_ansible_app
+            Name: eng89_brittany_playbook_app
 
       tags: ['never', 'create_ec2']
-
-
 
 ```
 
@@ -346,8 +346,18 @@ sudo chmod 666 pass.yml
 ```
 ansible-playbook playbook.yml --ask-vault-pass --tags create_ec2
 ```
+##### 14) Create DB EC2 instance 
+```
+ansible-playbook db_playbook.yml --ask-vault-pass --tags create_ec2
 
-##### 14) Once the instance has been created we can now ssh inside using the Public DNS (IPv4) created
+```
+
+##### 15) Create Bastion EC2 instance 
+```
+ansible-playbook bastion_playbook.yml --ask-vault-pass --tags create_ec2
+
+```
+##### 16) Once the instance has been created we can now ssh inside using the Public DNS (IPv4) created
 
 ```
 ssh -i ~/.ssh/my_aws ubuntu@ec2-ip.eu-west-1.compute.amazonaws.com
