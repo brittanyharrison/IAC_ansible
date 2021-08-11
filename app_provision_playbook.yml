@@ -1,0 +1,91 @@
+# This is a YAML file to install nginx onto oue web VM using YAML
+---
+
+  
+- hosts: web
+  gather_facts: yes
+  become: true
+
+
+  tasks:
+  - name: Install nginx
+    apt: pkg=nginx state=present
+    become_user: root
+
+  - name: Remove nginx deafault file (delete file)
+    file:
+      path: /etc/nginx/sites-enabled/default
+      state: absent
+
+  - name: Touch a file, using symbolic modes to set the permissions (equivalent to 0644)
+    file:
+      path: /etc/nginx/sites-enabled/reverseproxy.conf
+      state: touch
+      mode: '666'
+
+
+  - name: Insert multiple lines and Backup
+    blockinfile:
+      path: /etc/nginx/sites-enabled/reverseproxy.conf
+      block: |
+        server{
+          listen 80;
+          server_name development.web;
+          location / {
+              proxy_pass http://34.250.72.85:3000;
+          }
+        }
+
+
+  - name: Create a symbolic link
+    file:
+      src: /etc/nginx/sites-enabled/reverseproxy.conf
+      dest: /etc/nginx/sites-available/reverseproxy.conf
+      state: link
+
+
+  - name: nginx bug workaround
+    shell: |
+      sudo mkdir /etc/systemd/system/nginx.service.d
+        printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" | \
+          sudo tee /etc/systemd/system/nginx.service.d/override.conf
+      sudo systemctl daemon-reload
+      sudo systemctl restart nginx
+
+
+  - name: Install nodejs
+    apt: pkg=nodejs state=present
+
+
+  - name: Install NPM
+    apt: pkg=npm state=present
+
+# Downloading pm2
+  - name: Install pm2
+    npm:
+      name: pm2
+      global: yes
+
+
+  - name: download latest npm
+    shell: |
+      npm install -g npm@latest
+      npm install mongoose -y
+
+
+  - name: Copy web app into web virtual machine
+    synchronize:
+      src: /home/vagrant/app
+      dest: /home/vagrant
+
+
+  - name: set up app
+    shell: |
+      cd app/
+      npm install
+      node seeds/seed.js
+      pm2 kill
+      pm2 start app.js
+    environment:
+      DB_HOST: mongodb://ubuntu@10.204.2.244:27017/posts?authSource=admin
+    become_user: root

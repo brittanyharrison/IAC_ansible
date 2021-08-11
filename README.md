@@ -360,6 +360,6 @@ ansible-playbook bastion_playbook.yml --ask-vault-pass --tags create_ec2
 ##### 16) Once the instance has been created we can now ssh inside using the Public DNS (IPv4) created
 
 ```
-ssh -i ~/.ssh/my_aws ubuntu@ec2-ip.eu-west-1.compute.amazonaws.com
+ssh -i ~/.ssh/eng89_devops.pem ubuntu@34.250.72.85
 ```
 
